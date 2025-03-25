@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
+import { SWRConfig } from "swr";
 
 const primaryFont = Inter({
 	subsets: ["latin"],
@@ -27,7 +28,7 @@ export default function RootLayout({
 					enableSystem
 					disableTransitionOnChange
 				>
-					{children}
+					<SWRConfig>{children}</SWRConfig>
 				</ThemeProvider>
 				<Toaster />
 			</body>
