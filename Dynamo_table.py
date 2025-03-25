@@ -181,3 +181,4 @@ if __name__ == "__main__":
 # For Global Secondary Indexes: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GSI.html
 # Create Global Secondary Index (GSI) for DynamoDB using Boto3 in Python: https://stackoverflow.com/questions/72133092/create-global-secondary-index-gsi-for-dynamodb-using-boto3-in-python
 # Handling JSON Error: https://stackoverflow.com/questions/8381193/handle-json-decode-error-when-nothing-returned
+# Using batch_writer: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/dynamodb/table/batch_writer.html
