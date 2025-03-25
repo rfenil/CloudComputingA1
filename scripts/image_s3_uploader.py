@@ -2,7 +2,7 @@ import boto3
 import requests
 import json
 from uuid import uuid4
-from scripts.songs_dynamo_table import SongItem, SongDynamoDBOperations
+from songs_dynamo_table import SongItem, SongDynamoDBOperations
 
 # AWS S3 Bucket Configuration
 S3_BUCKET_NAME = "a1-projectgroup-31"

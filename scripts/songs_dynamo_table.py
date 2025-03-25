@@ -1,8 +1,9 @@
 import boto3
 from pydantic import BaseModel, Field
+from botocore.exceptions import ClientError
 
 AWS_REGION = "us-east-1"
-SONG_TABLE_NAME = "Songs"
+SONG_TABLE_NAME = "songs"
 
 class SongItem(BaseModel):
     id: str | None = Field(None, description="UUID")
@@ -20,9 +21,25 @@ class SongDynamoDBOperations:
         self.table_name = SONG_TABLE_NAME
         self.table = None
 
+    def table_exists(self):
+        """Check if the table already exists."""
+        try:
+            table = self.dynamodb.Table(self.table_name)
+            table.load()  # Raises an exception if the table doesn't exist
+            return True
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'ResourceNotFoundException':
+                return False
+            raise
+
     def create_table(self):
         try:
-            print("INFO: Creating DynamoDB table 'Song'")
+            if self.table_exists():
+                print(f"INFO: Table '{self.table_name}' already exists, using existing table")
+                self.table = self.dynamodb.Table(self.table_name)
+                return self.table
+
+            print(f"INFO: Creating DynamoDB table '{SONG_TABLE_NAME}'")
             self.table = self.dynamodb.create_table(
                 TableName=self.table_name,
                 KeySchema=[
@@ -63,29 +80,37 @@ class SongDynamoDBOperations:
                 ],
                 ProvisionedThroughput={'ReadCapacityUnits': 5, 'WriteCapacityUnits': 5}
             )
-            print("SUCCESS: DynamoDB table created successfully")
+            self.table.wait_until_exists()
+            print(f"SUCCESS: DynamoDB table created successfully: {self.table.item_count}")
             return self.table
         except Exception as e:
             print(f"ERROR: Failed to create DynamoDB table: {str(e)}")
             raise e
     
-    def insert_song_data(self, Song_item: SongItem):
+    def insert_song_data(self, song: SongItem):
         try:
-            print(f"INFO: Inserting Song data for '{Song_item.title}'")
-            table = self.dynamodb.Table(self.table_name)
-            table.put_item(Item={
-                'id': Song_item.id,
-                'title': Song_item.title,
-                'artist': Song_item.artist,
-                'year': Song_item.year,
-                'album': Song_item.album,
-                's3_url': Song_item.s3_url
-            })
-            print(f"SUCCESS: Inserted Song data for '{Song_item.title}'")
+            print(f"INFO: Inserting Song data for '{song.title}'")
+            self.table = self.dynamodb.Table(self.table_name)
+            item = {
+                'id': song.id,
+                'title': song.title,
+                'artist': song.artist,
+                'year': song.year,
+                'album': song.album,
+                'img_url': song.img_url
+            }
+            if song.s3_url:     
+                item['s3_url'] = song.s3_url
+            
+            self.table.put_item(Item=item)
+            print(f"SUCCESS: Inserted Song data for '{song.title}'")
         except Exception as e:
             print(f"ERROR: Failed to insert Song data: {str(e)}")
             raise e
 
 if __name__ == "__main__":
-    Song_dynamo_db_ops = SongDynamoDBOperations()
-    Song_dynamo_db_ops.create_table()
+    try:
+        song_dynamo_db_ops = SongDynamoDBOperations()
+        song_dynamo_db_ops.create_table()
+    except Exception as e:
+        print(f"ERROR: Failed in main execution: {str(e)}")
