@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { User } from "lucide-react";
 
-const username = "Krish Parekh"
+const username = "Krish Parekh";
 
 export default function UserArea() {
 	const onLogout = () => {};

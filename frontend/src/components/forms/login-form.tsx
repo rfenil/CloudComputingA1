@@ -1,6 +1,6 @@
 "use client";
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
+import { loginSchema } from "@/components/forms/schema/login-schema";
+import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardContent,
@@ -18,13 +18,13 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
-import type { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { loginSchema } from "@/components/forms/schema/login-schema";
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import type { z } from "zod";
 
 export default function LoginForm() {
 	const form = useForm<z.infer<typeof loginSchema>>({
@@ -41,8 +41,8 @@ export default function LoginForm() {
 	const onSubmit = async (data: z.infer<typeof loginSchema>) => {
 		console.log(data);
 		toast.success("Success!", {
-			description: "Login successful"
-		})
+			description: "Login successful",
+		});
 	};
 
 	return (

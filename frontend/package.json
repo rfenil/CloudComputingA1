@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "npx @biomejs/biome lint ./src",
+    "lint:fix": "npx @biomejs/biome check --fix --unsafe ./src"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",

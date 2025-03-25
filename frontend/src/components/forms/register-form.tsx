@@ -1,6 +1,6 @@
 "use client";
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
+import { registerSchema } from "@/components/forms/schema/register-schema";
+import { Button } from "@/components/ui/button";
 import {
 	Card,
 	CardContent,
@@ -18,13 +18,13 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
-import type { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { registerSchema } from "@/components/forms/schema/register-schema";
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import type { z } from "zod";
 
 export default function RegisterForm() {
 	const form = useForm<z.infer<typeof registerSchema>>({
@@ -45,8 +45,8 @@ export default function RegisterForm() {
 	const onSubmit = (values: z.infer<typeof registerSchema>) => {
 		console.log(values);
 		toast.success("Success", {
-			description: "Registration successful!"
-		})
+			description: "Registration successful!",
+		});
 	};
 
 	return (

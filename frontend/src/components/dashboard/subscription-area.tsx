@@ -1,9 +1,9 @@
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
-import { Music } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { MusicItem } from "@/types/main";
+import { Music } from "lucide-react";
+import Image from "next/image";
+import React from "react";
 
 const subscriptions: MusicItem[] = [
 	{
