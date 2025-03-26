@@ -1,26 +1,13 @@
 import { z } from "zod";
 
 export const registerSchema = z.object({
-	first_name: z
+	username: z
 		.string()
-		.min(2, "First name must be at least 2 characters long")
-		.max(255, "First name cannot exceed 255 characters"),
-	last_name: z
-		.string()
-		.min(2, "Last name must be at least 2 characters long")
-		.max(255, "Last name cannot exceed 255 characters"),
+		.min(2, "Username must be at least 2 characters long")
+		.max(255, "Username name cannot exceed 255 characters"),
 	email: z
 		.string()
-		.email()
-		.refine(
-			(value) => {
-				const pattern = /^s\d{7}[0-9]@student\.rmit\.edu\.au$/;
-				return pattern.test(value);
-			},
-			{
-				message: "Email must be in format s1234567[0-9]@student.rmit.edu.au",
-			},
-		),
+		.email(),
 	password: z
 		.string()
 		.min(8, "Password must be at least 8 characters long")
