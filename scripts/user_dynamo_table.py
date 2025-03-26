@@ -2,6 +2,7 @@ import boto3
 from pydantic import BaseModel, Field
 from botocore.exceptions import ClientError
 from uuid import uuid4
+import random 
 
 AWS_REGION = "us-east-1"
 USER_TABLE_NAME = "users"
@@ -83,18 +84,20 @@ class UserDynamoDBOperations:
             raise e
 
 def insert_sample_users(user_ops: UserDynamoDBOperations):
-    sample_users = [
-        UserItem(id=str(uuid4()), username="john_doe", email="john.doe@example.com", password="pass123"),
-        UserItem(id=str(uuid4()), username="jane_smith", email="jane.smith@example.com", password="secure456"),
-        UserItem(id=str(uuid4()), username="alice_w", email="alice.w@example.com", password="alice789"),
-        UserItem(id=str(uuid4()), username="bob_jones", email="bob.jones@example.com", password="bob101"),
-        UserItem(id=str(uuid4()), username="emma_k", email="emma.k@example.com", password="emma202"),
-        UserItem(id=str(uuid4()), username="mike_brown", email="mike.brown@example.com", password="mike303"),
-        UserItem(id=str(uuid4()), username="sarah_p", email="sarah.p@example.com", password="sarah404"),
-        UserItem(id=str(uuid4()), username="david_lee", email="david.lee@example.com", password="david505"),
-        UserItem(id=str(uuid4()), username="lisa_m", email="lisa.m@example.com", password="lisa606"),
-        UserItem(id=str(uuid4()), username="tom_h", email="tom.h@example.com", password="tom707")
+    sample_usernames = [
+        "Prajwal Manjunath", "Emma Miller", "Krish Parekh", "Sophia Smith", "James Johnson",
+        "Sophia Davis", "John Williams", "Michael Williams", "Divyam Juneja", "David Lee"
     ]
+
+    sample_users = []
+    base_id = 406250700  
+    for i, username in enumerate(sample_usernames):
+        student_id = base_id + i  # Increment ID for each user
+        email = f"s{student_id}@student.rmit.edu.au"
+        full_username = f"{username}{i}"
+        password = str(random.randint(100000, 999999))
+        user = UserItem(id=str(uuid4()), username=full_username, email=email, password=password)
+        sample_users.append(user)
     
     for user in sample_users:
         user_ops.insert_user_data(user)
