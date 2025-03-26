@@ -23,7 +23,7 @@ class UserDynamoDBOperations:
         """Check if the table already exists."""
         try:
             table = self.dynamodb.Table(self.table_name)
-            table.load()  # Raises an exception if the table doesn't exist
+            table.load() 
             return True
         except ClientError as e:
             if e.response['Error']['Code'] == 'ResourceNotFoundException':
