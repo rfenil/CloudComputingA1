@@ -5,7 +5,7 @@ from uuid import uuid4
 from songs_dynamo_table import SongItem, SongDynamoDBOperations
 
 # AWS S3 Bucket Configuration
-S3_BUCKET_NAME = "a1-projectgroup-31"
+S3_BUCKET_NAME = "a1-projectgroup-31-krish"
 AWS_REGION = "us-east-1"
 
 # JSON FILE
