@@ -43,10 +43,6 @@ interface IRegisterResponse {
 }
 
 export default function RegisterForm() {
-  const { trigger, isMutating, error } = useAuthServerMutation<
-    IRegisterRequest,
-    IRegisterResponse
-  >(URLs.post);
 
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
@@ -57,13 +53,29 @@ export default function RegisterForm() {
     },
   });
 
+  const { trigger, isMutating } = useAuthServerMutation<
+    IRegisterRequest,
+    IRegisterResponse
+  >(URLs.post, {
+    onSuccess() {
+      toast.success("Success", {
+        description: "Registration successful! Welcome aboard!",
+      });
+      form.reset();
+    },
+    onError(error) {
+      toast.error("Error", {
+        description: error?.message || "Failed to register. Please try again.",
+      });
+    }
+  });
+
   const [showPassword, setShowPassword] = useState(false);
   const togglePassword = () => {
     setShowPassword(!showPassword);
   };
 
   const onSubmit = async (values: z.infer<typeof registerSchema>) => {
-    try {
       const registerData = {
         username: values.username,
         email: values.email,
@@ -71,18 +83,6 @@ export default function RegisterForm() {
       };
 
       await trigger(registerData);
-
-      toast.success("Success", {
-        description: "Registration successful! Welcome aboard!",
-      });
-
-      // Reset form after successful registration
-      form.reset();
-    } catch {
-      toast.error("Error", {
-        description: error?.message || "Failed to register. Please try again.",
-      });
-    }
   };
 
   return (
