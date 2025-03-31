@@ -106,7 +106,6 @@ class AuthService:
             logger.error(f"Error during registration: {error}")
             return self._generate_response(500, "Internal Server Error")
     
-
     def get_user(self):
         try:
             query_params = self.event.get('queryStringParameters', {})
