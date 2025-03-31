@@ -105,7 +105,38 @@ class AuthService:
         except Exception as error:
             logger.error(f"Error during registration: {error}")
             return self._generate_response(500, "Internal Server Error")
+    
 
+    def get_user(self):
+        try:
+            query_params = self.event.get('queryStringParameters', {})
+            user_id = query_params.get('user_id') if query_params else None
+            
+            if not user_id:
+                return self._generate_response(400, "Missing user_id in query parameters")
+            
+            response = table.get_item(
+                Key={
+                    'id': user_id
+                }
+            )
+            
+            if 'Item' not in response:
+                return self._generate_response(404, "User not found")
+            
+            user = response['Item']
+            
+            user_data = {
+                'user_id': user['id'],
+                'email': user['email'],
+                'username': user['username']
+            }
+            
+            return self._generate_response(200, "User retrieved successfully", user_data)
+            
+        except Exception as error:
+            logger.error(f"Error retrieving user: {error}")
+            return self._generate_response(500, "Internal Server Error")
 
 def lambda_handler(event, context):
     try:
@@ -118,6 +149,8 @@ def lambda_handler(event, context):
             return auth.login()
         elif path == "/register" and httpMethod == 'POST':
             return auth.register()
+        elif path == "/user" and httpMethod == 'GET':
+            return auth.get_user()
         else:
             return {
                 'statusCode': 400,
