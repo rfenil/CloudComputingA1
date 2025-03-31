@@ -33,9 +33,8 @@ async function fetcher({ url, init, error }: IFetcherParams) {
   } catch (e) {
     if (e instanceof Error && e.message) {
       throw e;
-    } else {
-      throw new Error(error);
     }
+    throw new Error(error);
   }
 }
 
@@ -70,4 +69,18 @@ export function postJsonFetcher(baseURL: string) {
       error: "An error occurred while posting the data.",
     });
   };
+}
+
+export function getFetcher(baseURL: string) {
+  return (key: string | [string, string]) =>
+    fetcher({
+      url: baseURL + (Array.isArray(key) ? key[0] : key),
+      init: {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+      error: "An error occurred while getting the data.",
+    });
 }

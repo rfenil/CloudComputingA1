@@ -4,5 +4,11 @@ export interface MusicItem {
 	artist: string;
 	album: string;
 	year: string;
-	imageUrl: string;
+	image_url: string;
+}
+
+export interface IResponse<T> {
+	statusCode?: number;
+	data?: T;
+	message: string;
 }
