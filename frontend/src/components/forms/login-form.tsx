@@ -38,7 +38,6 @@ const URLs = {
 };
 
 export default function LoginForm() {
-
 	const router = useRouter();
 
 	const setCookie = useCookies<string>([])[1];
@@ -51,7 +50,7 @@ export default function LoginForm() {
 				description: "You have successfully logged in! Redirecting...",
 			});
 			setCookie("user_id", data?.data?.user_id, { ...cookieOptions });
-			router.push("/")
+			router.push("/");
 			form.reset();
 		},
 		onError(error) {

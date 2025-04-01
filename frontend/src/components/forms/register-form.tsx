@@ -64,7 +64,7 @@ export default function RegisterForm() {
 				description: "Registration successful! Welcome aboard!",
 			});
 			form.reset();
-			router.push("/login")
+			router.push("/login");
 		},
 		onError(error) {
 			toast.error("Error", {
