@@ -1,3 +1,9 @@
+export interface IUserResponse {
+	username: string;
+	email: string;
+	password: string;
+}
+
 export interface MusicItem {
 	id: string;
 	title: string;

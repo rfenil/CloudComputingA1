@@ -18,11 +18,12 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useAuthServerMutation } from "@/hooks/useMutations";
+import { useBackendMutation } from "@/hooks/useMutations";
 import type { IResponse } from "@/types/main";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -43,6 +44,8 @@ interface IRegisterResponse {
 }
 
 export default function RegisterForm() {
+	const router = useRouter();
+
 	const form = useForm<z.infer<typeof registerSchema>>({
 		resolver: zodResolver(registerSchema),
 		defaultValues: {
@@ -52,7 +55,7 @@ export default function RegisterForm() {
 		},
 	});
 
-	const { trigger, isMutating } = useAuthServerMutation<
+	const { trigger, isMutating } = useBackendMutation<
 		IRegisterRequest,
 		IResponse<IRegisterResponse>
 	>(URLs.post, {
@@ -61,6 +64,7 @@ export default function RegisterForm() {
 				description: "Registration successful! Welcome aboard!",
 			});
 			form.reset();
+			router.push("/login")
 		},
 		onError(error) {
 			toast.error("Error", {

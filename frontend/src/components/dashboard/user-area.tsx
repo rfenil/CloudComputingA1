@@ -1,31 +1,50 @@
 "use client";
 
+import { useCookies } from "react-cookie";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuthServerQuery } from "@/hooks/useQuery";
+import { useBackendQuery } from "@/hooks/useQuery";
 import buildURLSearchParams from "@/lib/buildURLSearchParams";
-import { IResponse } from "@/types/main";
+import type { IResponse, IUserResponse } from "@/types/main";
 import { User } from "lucide-react";
-
-interface IUserResponse {
-  username: string;
-  email: string;
-  password: string;
-}
+import { useRouter } from "next/navigation"; 
+import { cookieOptions } from "@/lib/cookieOptions";
 
 const URLs = {
   get: "/user",
 };
 
-
-
 export default function UserArea() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [cookies, _setCookie, removeCookie] = useCookies<string>(["user_id"]); 
+  const router = useRouter(); 
 
-  const { data } = useAuthServerQuery<IResponse<IUserResponse>>(`${URLs.get}${buildURLSearchParams({
-    user_id: "d10586f2-0f5c-4261-a131-e43ac66f0a0b"
-  })}`);
+  const userId = cookies.user_id; 
 
-  const onLogout = () => {};
+  const { data } = useBackendQuery<IResponse<IUserResponse>>(
+    `${URLs.get}${buildURLSearchParams({
+      user_id: userId,
+    })}`
+  );
+
+  const onLogout = () => {
+    removeCookie("user_id", cookieOptions); 
+    router.push("/login"); 
+  };
+
+  if (!userId) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Not Logged In</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>Please log in to view your profile.</p>
+          <Button onClick={() => router.push("/login")}>Go to Login</Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>

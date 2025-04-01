@@ -13,7 +13,7 @@ export default function useMutation<ExtraArgs, Data>(
 	});
 }
 
-export function useAuthServerMutation<ExtraArgs, Data>(
+export function useBackendMutation<ExtraArgs, Data>(
 	key: string,
 	config?: SWRMutationConfiguration<Data, Error, string, ExtraArgs>,
 ) {
