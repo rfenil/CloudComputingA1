@@ -4,7 +4,7 @@ export interface MusicItem {
 	artist: string;
 	album: string;
 	year: string;
-	image_url: string;
+	img_url: string;
 }
 
 export interface IResponse<T> {

@@ -62,9 +62,9 @@ export default function SubscriptionArea() {
                 className="border rounded-lg p-4 flex flex-col sm:flex-row gap-4"
               >
                 <div className="relative w-24 h-24 flex-shrink-0 mx-auto sm:mx-0">
-                  {item.image_url ? (
+                  {item.img_url ? (
                     <Image
-                      src={item.image_url || "/placeholder.svg"}
+                      src={item.img_url || "/placeholder.svg"}
                       alt={`${item.artist} image`}
                       fill
                       className="object-cover rounded-md"
