@@ -23,36 +23,58 @@ def create_private_s3_bucket(bucket_name: str, region_name: str):
 
         if bucket_exists:
             print(f"INFO: S3 bucket '{bucket_name}' already exists")
-            return
-
-        if region_name == "us-east-1":
-            s3.create_bucket(
-                Bucket=bucket_name,
-                ACL='private',
-            )
         else:
-            location = {'LocationConstraint': region_name}
-            s3.create_bucket(
-                Bucket=bucket_name,
-                ACL='private',
-                CreateBucketConfiguration=location
-            )
+            if region_name == "us-east-1":
+                s3.create_bucket(
+                    Bucket=bucket_name,
+                    ACL='private',
+                )
+            else:
+                location = {'LocationConstraint': region_name}
+                s3.create_bucket(
+                    Bucket=bucket_name,
+                    ACL='private',
+                    CreateBucketConfiguration=location
+                )
 
+            print(f"SUCCESS: Created private S3 bucket '{bucket_name}'")
+
+        # Ensure public access block allows public reads
         s3.put_public_access_block(
             Bucket=bucket_name,
             PublicAccessBlockConfiguration={
-                'BlockPublicAcls': True,
-                'IgnorePublicAcls': True,
-                'BlockPublicPolicy': True,
-                'RestrictPublicBuckets': True,
+                'BlockPublicAcls': False,
+                'IgnorePublicAcls': False,
+                'BlockPublicPolicy': False,  # Allow public read access via policy
+                'RestrictPublicBuckets': False, 
             },
         )
 
-        print(f"SUCCESS: Created private S3 bucket '{bucket_name}'")
+        # Apply a bucket policy to allow public reads on objects
+        bucket_policy = {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Sid": "PublicReadGetObject",
+                    "Effect": "Allow",
+                    "Principal": "*",
+                    "Action": "s3:GetObject",
+                    "Resource": f"arn:aws:s3:::{bucket_name}/*"
+                }
+            ]
+        }
+
+        s3.put_bucket_policy(
+            Bucket=bucket_name,
+            Policy=json.dumps(bucket_policy)
+        )
+
+        print(f"SUCCESS: Public read access enabled for objects in '{bucket_name}'")
 
     except Exception as e:
         print(f"ERROR: Failed to create S3 bucket '{bucket_name}': {str(e)}")
         raise e
+
 
 
 def upload_image_to_s3_bucket(
@@ -74,7 +96,9 @@ def upload_image_to_s3_bucket(
                 'title': song.title,
                 'year': song.year,
                 'artist': song.artist
-            })
+            },
+        )
+
         s3_url = f"https://{bucket_name}.s3.{region_name}.amazonaws.com/{key}"
         print(f"SUCCESS: Uploaded '{image_name}' to S3")
         return s3_url

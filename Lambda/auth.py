@@ -108,12 +108,13 @@ class AuthService:
     
     def get_user(self) -> dict:
         try:
-            query_params = self.event.get('queryStringParameters', {})
+            logger.info("Getting user")
+            query_params = self.event.get('queryStringParameters')
             user_id = query_params.get('user_id') if query_params else None
-            
+            logger.info(f"Query parameters: {query_params}")
             if not user_id:
                 return self._generate_response(400, "Missing user_id in query parameters")
-            
+            logger.info(f"User ID: {user_id}")
             response = table.get_item(
                 Key={
                     'id': user_id
@@ -122,13 +123,16 @@ class AuthService:
             
             if 'Item' not in response:
                 return self._generate_response(404, "User not found")
+
+            logger.info(f"Got the respons for the user")
             
             user = response['Item']
             
             user_data = {
                 'user_id': user['id'],
                 'email': user['email'],
-                'username': user['username']
+                'username': user['username'],
+                'subscriptions': user['subscription']
             }
             
             return self._generate_response(200, "User retrieved successfully", user_data)
@@ -137,30 +141,25 @@ class AuthService:
             logger.error(f"Error retrieving user: {error}")
             return self._generate_response(500, "Internal Server Error")
 
+
 def lambda_handler(event, context):
     try:
-        httpMethod = event['httpMethod']
-        path = event['path']
-        body = json.loads(event['body'])
+        httpMethod = event.get('httpMethod', '')
+        path = event.get('path')
+        raw_body = event.get('body')
+        body = json.loads(raw_body) if isinstance(raw_body, str) else {}
         auth = AuthService(event, context, body)
+
 
         if path == "/login" and httpMethod == 'POST':
             return auth.login()
         elif path == "/register" and httpMethod == 'POST':
             return auth.register()
         elif path == "/user" and httpMethod == 'GET':
+            logger.info("GET USER")
             return auth.get_user()
         else:
-            return {
-                'statusCode': 400,
-                "headers": {
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-                    "Access-Control-Allow-Headers":
-                    "Content-Type, Authorization"
-                },
-                'body': json.dumps({'message': 'Invalid action type'})
-            }
+            return auth._generate_response(400, 'Invalid action type')
 
     except Exception as error:
         logger.error(f"Error in lambda handler: {error}")

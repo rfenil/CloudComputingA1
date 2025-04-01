@@ -35,7 +35,7 @@ export default function SubscriptionArea() {
   >(URLs.post);
   useEffect(() => {
     trigger({
-      user_id: "e3f4fa5d-6ffa-4496-8bc3-ee28dbc3f46b",
+      user_id: "d10586f2-0f5c-4261-a131-e43ac66f0a0b",
     });
   }, [trigger]);
   return (
