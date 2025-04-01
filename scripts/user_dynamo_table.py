@@ -1,16 +1,14 @@
 import boto3
 from pydantic import BaseModel, Field
 from botocore.exceptions import ClientError
-from uuid import uuid4
-import random 
+import random
 
 AWS_REGION = "us-east-1"
 USER_TABLE_NAME = "users"
 
 class UserItem(BaseModel):
-    id: str | None = Field(None, description="UUID")
+    email: str = Field(..., description="User email")
     username: str = Field(..., description="Username")
-    email: str = Field(..., description="Email")
     password: str = Field(..., description="Password")
     subscription: list[str] = Field(default_factory=list, description="List of user subscriptions")
 
@@ -44,19 +42,10 @@ class UserDynamoDBOperations:
             self.table = self.dynamodb.create_table(
                 TableName=self.table_name,
                 KeySchema=[
-                    {'AttributeName': 'id', 'KeyType': 'HASH'}
+                    {'AttributeName': 'email', 'KeyType': 'HASH'}
                 ],
                 AttributeDefinitions=[
-                    {'AttributeName': 'id', 'AttributeType': 'S'},
-                    {'AttributeName': 'email', 'AttributeType': 'S'},  # For GSI
-                ],
-                GlobalSecondaryIndexes=[
-                    {
-                        'IndexName': 'EmailIndex',
-                        'KeySchema': [{'AttributeName': 'email', 'KeyType': 'HASH'}],
-                        'Projection': {'ProjectionType': 'ALL'},
-                        'ProvisionedThroughput': {'ReadCapacityUnits': 5, 'WriteCapacityUnits': 5}
-                    }
+                    {'AttributeName': 'email', 'AttributeType': 'S'}
                 ],
                 ProvisionedThroughput={'ReadCapacityUnits': 5, 'WriteCapacityUnits': 5}
             )
@@ -73,7 +62,6 @@ class UserDynamoDBOperations:
             print(f"INFO: Inserting User data for '{user.username}'")
             self.table = self.dynamodb.Table(self.table_name)
             item = {
-                'id': user.id,
                 'username': user.username,
                 'email': user.email,
                 'password': user.password,
@@ -99,7 +87,7 @@ def insert_sample_users(user_ops: UserDynamoDBOperations):
         email = f"s{student_id}@student.rmit.edu.au"
         full_username = f"{username}{i}"
         password = str(random.randint(100000, 999999))
-        user = UserItem(id=str(uuid4()), username=full_username, email=email, password=password, subscription=[])
+        user = UserItem(username=full_username, email=email, password=password, subscription=[])
         sample_users.append(user)
     
     for user in sample_users:
