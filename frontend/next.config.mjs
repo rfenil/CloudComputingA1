@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ["raw.githubusercontent.com"],
+    remotePatterns: ["raw.githubusercontent.com", "a1-projectgroup-31-krish.s3.us-east-1.amazonaws.com"],
   },
 };
 
