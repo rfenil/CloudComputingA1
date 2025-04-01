@@ -2,13 +2,16 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useBackendQuery } from "@/hooks/useQuery";
 import buildURLSearchParams from "@/lib/buildURLSearchParams";
 import { cookieOptions } from "@/lib/cookieOptions";
 import type { IResponse, IUserResponse } from "@/types/main";
 import { User } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useCookies } from "react-cookie";
+import { toast } from "sonner";
 
 const URLs = {
 	get: "/user",
@@ -21,30 +24,25 @@ export default function UserArea() {
 
 	const userId = cookies.user_id;
 
-	const { data } = useBackendQuery<IResponse<IUserResponse>>(
+	const { data, isValidating } = useBackendQuery<IResponse<IUserResponse>>(
 		`${URLs.get}${buildURLSearchParams({
 			user_id: userId,
 		})}`,
 	);
 
 	const onLogout = () => {
+		toast.success("Logout Successful", {
+			description: "You have successfully logged out! Redirecting...",
+		});
 		removeCookie("user_id", cookieOptions);
 		router.push("/login");
 	};
 
-	if (!userId) {
-		return (
-			<Card>
-				<CardHeader>
-					<CardTitle>Not Logged In</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<p>Please log in to view your profile.</p>
-					<Button onClick={() => router.push("/login")}>Go to Login</Button>
-				</CardContent>
-			</Card>
-		);
-	}
+	useEffect(() => {
+		if (!userId) {
+			router.push("/login");
+		}
+	}, [userId, router]);
 
 	return (
 		<Card>
@@ -58,8 +56,15 @@ export default function UserArea() {
 				<div className="bg-primary/10 p-3 rounded-full">
 					<User className="h-8 w-8 text-primary" />
 				</div>
-				<div>
-					<p className="text-lg font-medium">Welcome, {data?.data?.username}</p>
+				<div className="space-y-2">
+					{isValidating ? (
+						<Skeleton className="w-[200] h-[10px] rounded-full" />
+					) : (
+						<p className="text-lg font-medium">
+							Welcome, {data?.data?.username}
+						</p>
+					)}
+
 					<p className="text-sm text-muted-foreground">
 						Manage your music subscriptions
 					</p>

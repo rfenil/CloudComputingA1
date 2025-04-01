@@ -17,7 +17,6 @@ export function useBackendMutation<ExtraArgs, Data>(
 	key: string,
 	config?: SWRMutationConfiguration<Data, Error, string, ExtraArgs>,
 ) {
-	console.log("Auth Server URL", AuthServerUrl);
 	return useMutation<ExtraArgs, Data>(
 		key,
 		postJsonFetcher(AuthServerUrl),

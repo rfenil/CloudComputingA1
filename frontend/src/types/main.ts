@@ -13,6 +13,15 @@ export interface MusicItem {
 	img_url: string;
 }
 
+export interface IMusicRequest {
+	user_id: string;
+}
+
+export interface IUnsubscribeRequest {
+	user_id: string;
+	song_id: string;
+}
+
 export interface IResponse<T> {
 	statusCode?: number;
 	data?: T;

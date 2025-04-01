@@ -3,48 +3,63 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useBackendMutation } from "@/hooks/useMutations";
-import type { IResponse, MusicItem } from "@/types/main";
+import { useBackendQuery } from "@/hooks/useQuery";
+import buildURLSearchParams from "@/lib/buildURLSearchParams";
+import type { IResponse, IUnsubscribeRequest, MusicItem } from "@/types/main";
 import { Music } from "lucide-react";
 import Image from "next/image";
-import React, { useEffect } from "react";
-
-// const subscriptions: MusicItem[] = [
-//   {
-//     id: "1",
-//     title: "Come Monday",
-//     artist: "Jimmy Buffett",
-//     album: "Living and Dying in 3/4 Time",
-//     year: "1974",
-//     image_url:
-//       "https://raw.githubusercontent.com/YingZhang2015/cc/main/TheTallestManOnEarth.jpg",
-//   },
-// ];
-
-interface IMusicRequest {
-	user_id: string;
-}
+import React from "react";
+import { useCookies } from "react-cookie";
+import { toast } from "sonner";
 
 const URLs = {
-	post: "/subscribed",
+	get: "/subscribed",
+	post: "/unsubscribe",
 };
 
 export default function SubscriptionArea() {
-	const { trigger, data } = useBackendMutation<
-		IMusicRequest,
-		IResponse<MusicItem[]>
-	>(URLs.post);
-	useEffect(() => {
-		trigger({
-			user_id: "d10586f2-0f5c-4261-a131-e43ac66f0a0b",
-		});
-	}, [trigger]);
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	const [cookies, _setCookie, removeCookie] = useCookies<string>(["user_id"]);
+
+	const userId = cookies.user_id;
+	const {
+		data,
+		mutate,
+		isLoading: queryLoading,
+	} = useBackendQuery<IResponse<MusicItem[]>>(
+		`${URLs.get}${buildURLSearchParams({
+			user_id: userId,
+		})}`,
+	);
+
+	const { trigger: unSubscribeTrigger, isMutating } = useBackendMutation<
+		IUnsubscribeRequest,
+		IResponse<null>
+	>(URLs.post, {
+		onSuccess: () => {
+			toast.success("Successfully unsubscribed!");
+			mutate();
+		},
+		onError: (error) => {
+			toast.error(`Failed to unsubscribe: ${error.message || "Unknown error"}`);
+		},
+	});
+
+	const unSubscribe = async (user_id: string, song_id: string) => {
+		await unSubscribeTrigger({ user_id, song_id });
+	};
+
 	return (
 		<Card className="h-[600px] overflow-auto">
 			<CardHeader>
 				<CardTitle>Your Subscriptions</CardTitle>
 			</CardHeader>
 			<CardContent>
-				{data?.data?.length === 0 ? (
+				{queryLoading ? (
+					<div className="flex items-center justify-center h-64">
+						<p>Loading Subscriptions...</p>
+					</div>
+				) : data?.data?.length === 0 ? (
 					<div className="flex flex-col items-center justify-center h-64 text-center">
 						<Music className="h-12 w-12 text-muted-foreground mb-4" />
 						<p className="text-muted-foreground">
@@ -82,8 +97,15 @@ export default function SubscriptionArea() {
 										<p>Album: {item.album}</p>
 										<p>Year: {item.year}</p>
 									</div>
-									<Button variant="destructive" size="sm">
-										Remove
+									<Button
+										variant="destructive"
+										size="sm"
+										onClick={() => {
+											unSubscribe(userId, item.id);
+										}}
+										disabled={isMutating}
+									>
+										{isMutating ? <>Removing...</> : "Remove"}
 									</Button>
 								</div>
 							</div>

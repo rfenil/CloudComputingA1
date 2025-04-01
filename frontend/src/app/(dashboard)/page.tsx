@@ -1,3 +1,5 @@
+"use client";
+
 import BrowseArea from "@/components/dashboard/browser-area";
 import QueryArea from "@/components/dashboard/query-area";
 import SubscriptionArea from "@/components/dashboard/subscription-area";
