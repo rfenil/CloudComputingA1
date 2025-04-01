@@ -22,6 +22,11 @@ export interface IUnsubscribeRequest {
 	song_id: string;
 }
 
+export interface ISubscribeRequest {
+	user_id: string;
+	song_id: string;
+}
+
 export interface IResponse<T> {
 	statusCode?: number;
 	data?: T;
