@@ -2,14 +2,15 @@ import boto3
 import requests
 import json
 from uuid import uuid4
-from songs_dynamo_table import SongItem, SongDynamoDBOperations
+
+from music_dynamo_table import MusicDynamoDBOperations, MusicItem
 
 # AWS S3 Bucket Configuration
-S3_BUCKET_NAME = "a1-projectgroup-31-krish"
+S3_BUCKET_NAME = "a1-projectgroup-31-group"
 AWS_REGION = "us-east-1"
 
 # JSON FILE
-SONG_JSON_FILE_NAME = "../2025a1.json"
+SONG_JSON_FILE_NAME = "./2025a1.json"
 
 def create_private_s3_bucket(bucket_name: str, region_name: str):
     try:
@@ -82,7 +83,7 @@ def upload_image_to_s3_bucket(
         region_name: str,
         image_content: bytes, 
         image_name: str, 
-        song: SongItem
+        song: MusicItem
 ) -> str:
     try:
         s3 = boto3.client("s3", region_name=region_name)
@@ -110,7 +111,7 @@ def upload_image_to_s3_bucket(
 def process_songs_json():
     try:
         songs_data = {}
-        music_dynamo_db_ops = SongDynamoDBOperations()
+        music_dynamo_db_ops = MusicDynamoDBOperations()
 
         print("INFO: Reading music JSON file")
         with open(SONG_JSON_FILE_NAME, "r", encoding="utf-8") as file:
@@ -120,7 +121,7 @@ def process_songs_json():
         processed_url = set()
 
         for song_data in songs_data.get('songs', []):
-            song = SongItem(
+            song = MusicItem(
                 id=str(uuid4()),
                 title=song_data.get('title', ''),
                 artist=song_data.get('artist', ''),
@@ -151,7 +152,7 @@ def process_songs_json():
                         song
                     )
                     song.s3_url = s3_url
-                    music_dynamo_db_ops.insert_song_data(song)
+                    music_dynamo_db_ops.insert_music_data(song)
                     processed_url.add(song.img_url)
                     print(f"SUCCESS: Processed '{song.title}' successfully")
                 else:
