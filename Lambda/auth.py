@@ -83,7 +83,7 @@ class AuthService:
 
             email = user['email']
             return self._generate_response(200, 'Login Successful',
-                                           {'Email Address': email})
+                                           {'user_id': email})
 
         except Exception as error:
             logger.error(f"Error during login: {error}")
@@ -114,7 +114,7 @@ class AuthService:
                 })
             logger.info(f"User registered successfully: {email}")
             return self._generate_response(201, 'User created successfully',
-                                           {'email': email})
+                                           {'user_id': email})
         except Exception as error:
             logger.error(f"Error during registration: {error}")
             return self._generate_response(500, "Internal Server Error")
