@@ -14,7 +14,7 @@ music_table = dynamodb.Table('music')
 users_table = dynamodb.Table('users')
 
 
-class SongService:
+class MusicSearvice:
 
     def __init__(self, event, context, body):
         self.event = event
@@ -232,7 +232,7 @@ class SongService:
 
             logger.info(f"User with id {user_id} found")
 
-            song_response = songs_table.get_item(Key={'id': song_id})
+            song_response = music_table.get_item(Key={'id': song_id})
             if 'Item' not in song_response:
                 return self._generate_response(404, 'Song not found')
 
@@ -269,16 +269,16 @@ def lambda_handler(event, context):
         logger.info(f"PATH = {path}, HTTP_METHOD = {httpMethod}")
         raw_body = event.get('body')
         body = json.loads(raw_body) if isinstance(raw_body, str) else {}
-        song = SongService(event, context, body)
+        music = MusicSearvice(event, context, body)
 
         if path == "/" and httpMethod == 'GET':
-            return song.get_songs()
+            return music.get_songs()
         elif path == "/subscribe" and httpMethod == 'POST':
-            return song.subscribe()
+            return music.subscribe()
         elif path == "/unsubscribe" and httpMethod == 'POST':
-            return song.unsubscribe()
+            return music.unsubscribe()
         elif path == "/subscribed" and httpMethod == 'GET':
-            return song.get_subscribed_songs()
+            return music.get_subscribed_songs()
         else:
             return {
                 'statusCode': 400,
