@@ -1,6 +1,8 @@
 import boto3
 from pydantic import BaseModel, Field
 from botocore.exceptions import ClientError
+from boto3.dynamodb.conditions import Key
+from typing import Optional, Tuple, List
 
 AWS_REGION = "us-east-1"
 SONG_TABLE_NAME = "songs"
@@ -47,33 +49,43 @@ class SongDynamoDBOperations:
                 ],
                 AttributeDefinitions=[
                     {'AttributeName': 'id', 'AttributeType': 'S'},
-                    {'AttributeName': 'title', 'AttributeType': 'S'},
                     {'AttributeName': 'artist', 'AttributeType': 'S'},
+                    {'AttributeName': 'title', 'AttributeType': 'S'},
                     {'AttributeName': 'year', 'AttributeType': 'S'},
-                    {'AttributeName': 'album', 'AttributeType': 'S'},
+                    {'AttributeName': 'album', 'AttributeType': 'S'}
                 ],
                 GlobalSecondaryIndexes=[
                     {
+                        'IndexName': 'ArtistYearIndex',
+                        'KeySchema': [
+                            {'AttributeName': 'artist', 'KeyType': 'HASH'},
+                            {'AttributeName': 'year', 'KeyType': 'RANGE'}
+                        ],
+                        'Projection': {'ProjectionType': 'ALL'},
+                        'ProvisionedThroughput': {'ReadCapacityUnits': 5, 'WriteCapacityUnits': 5}
+                    },
+                    {
                         'IndexName': 'TitleIndex',
-                        'KeySchema': [{'AttributeName': 'title', 'KeyType': 'HASH'}],
+                        'KeySchema': [
+                            {'AttributeName': 'title', 'KeyType': 'HASH'}
+                        ],
                         'Projection': {'ProjectionType': 'ALL'},
                         'ProvisionedThroughput': {'ReadCapacityUnits': 5, 'WriteCapacityUnits': 5}
                     },
                     {
-                        'IndexName': 'ArtistIndex',
-                        'KeySchema': [{'AttributeName': 'artist', 'KeyType': 'HASH'}],
-                        'Projection': {'ProjectionType': 'ALL'},
-                        'ProvisionedThroughput': {'ReadCapacityUnits': 5, 'WriteCapacityUnits': 5}
-                    },
-                    {
-                        'IndexName': 'YearIndex',
-                        'KeySchema': [{'AttributeName': 'year', 'KeyType': 'HASH'}],
+                        'IndexName': 'ArtistAlbumIndex',
+                        'KeySchema': [
+                            {'AttributeName': 'artist', 'KeyType': 'HASH'},
+                            {'AttributeName': 'album', 'KeyType': 'RANGE'}
+                        ],
                         'Projection': {'ProjectionType': 'ALL'},
                         'ProvisionedThroughput': {'ReadCapacityUnits': 5, 'WriteCapacityUnits': 5}
                     },
                     {
                         'IndexName': 'AlbumIndex',
-                        'KeySchema': [{'AttributeName': 'album', 'KeyType': 'HASH'}],
+                        'KeySchema': [
+                            {'AttributeName': 'album', 'KeyType': 'HASH'}
+                        ],
                         'Projection': {'ProjectionType': 'ALL'},
                         'ProvisionedThroughput': {'ReadCapacityUnits': 5, 'WriteCapacityUnits': 5}
                     }
