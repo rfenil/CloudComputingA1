@@ -1,7 +1,20 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ["raw.githubusercontent.com"],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'raw.githubusercontent.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'a1-projectgroup-31-krish.s3.us-east-1.amazonaws.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
   },
 };
 

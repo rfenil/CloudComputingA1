@@ -12,6 +12,7 @@ class UserItem(BaseModel):
     username: str = Field(..., description="Username")
     email: str = Field(..., description="Email")
     password: str = Field(..., description="Password")
+    subscription: list[str] = Field(default_factory=list, description="List of user subscriptions")
 
 class UserDynamoDBOperations:
 
@@ -75,7 +76,8 @@ class UserDynamoDBOperations:
                 'id': user.id,
                 'username': user.username,
                 'email': user.email,
-                'password': user.password
+                'password': user.password,
+                'subscription': user.subscription
             }
             self.table.put_item(Item=item)
             print(f"SUCCESS: Inserted User data for '{user.username}'")
@@ -91,12 +93,13 @@ def insert_sample_users(user_ops: UserDynamoDBOperations):
 
     sample_users = []
     base_id = 406250700  
+    
     for i, username in enumerate(sample_usernames):
-        student_id = base_id + i  # Increment ID for each user
+        student_id = base_id + i 
         email = f"s{student_id}@student.rmit.edu.au"
         full_username = f"{username}{i}"
         password = str(random.randint(100000, 999999))
-        user = UserItem(id=str(uuid4()), username=full_username, email=email, password=password)
+        user = UserItem(id=str(uuid4()), username=full_username, email=email, password=password, subscription=[])
         sample_users.append(user)
     
     for user in sample_users:

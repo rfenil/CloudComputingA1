@@ -97,10 +97,9 @@ class SongDynamoDBOperations:
                 'artist': song.artist,
                 'year': song.year,
                 'album': song.album,
-                'img_url': song.img_url
             }
             if song.s3_url:     
-                item['s3_url'] = song.s3_url
+                item['img_url'] = song.s3_url
             
             self.table.put_item(Item=item)
             print(f"SUCCESS: Inserted Song data for '{song.title}'")
