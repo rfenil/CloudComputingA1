@@ -64,7 +64,7 @@ export default function RegisterForm() {
 				description: "Registration successful! Welcome aboard!",
 			});
 			form.reset();
-			router.push("/login");
+			router.replace("/login");
 		},
 		onError(error) {
 			toast.error("Error", {
@@ -79,13 +79,19 @@ export default function RegisterForm() {
 	};
 
 	const onSubmit = async (values: z.infer<typeof registerSchema>) => {
-		const registerData = {
-			username: values.username,
-			email: values.email,
-			password: values.password,
-		};
+		try {
+			const registerData = {
+				username: values.username,
+				email: values.email,
+				password: values.password,
+			};
 
-		await trigger(registerData);
+			await trigger(registerData);
+		} catch {
+			toast.error("Error", {
+				description: "Unexpected error occured during registration.",
+			});
+		}
 	};
 
 	return (

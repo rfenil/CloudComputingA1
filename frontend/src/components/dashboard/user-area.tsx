@@ -9,7 +9,6 @@ import { cookieOptions } from "@/lib/cookieOptions";
 import type { IResponse, IUserResponse } from "@/types/main";
 import { User } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { useCookies } from "react-cookie";
 import { toast } from "sonner";
 
@@ -22,27 +21,25 @@ export default function UserArea() {
 	const [cookies, _setCookie, removeCookie] = useCookies<string>(["user_id"]);
 	const router = useRouter();
 
-	const userId = cookies.user_id;
-
-	const { data, isValidating } = useBackendQuery<IResponse<IUserResponse>>(
-		`${URLs.get}${buildURLSearchParams({
-			user_id: userId,
-		})}`,
+	const user_id = cookies.user_id;
+	const url = user_id
+		? `${URLs.get}${buildURLSearchParams({ user_id: user_id })}`
+		: null;
+	const { data, isLoading } = useBackendQuery<IResponse<IUserResponse>>(
+		url,
+		{
+			revalidateOnFocus: false,
+			refreshInterval: 900000, // 15 min refresh interval
+		},
 	);
 
 	const onLogout = () => {
+		removeCookie("user_id", cookieOptions);
 		toast.success("Logout Successful", {
 			description: "You have successfully logged out! Redirecting...",
 		});
-		removeCookie("user_id", cookieOptions);
 		router.replace("/login");
 	};
-
-	useEffect(() => {
-		if (!userId) {
-			router.replace("/login");
-		}
-	}, [userId, router]);
 
 	return (
 		<Card>
@@ -57,7 +54,7 @@ export default function UserArea() {
 					<User className="h-8 w-8 text-primary" />
 				</div>
 				<div className="space-y-2">
-					{isValidating ? (
+					{isLoading ? (
 						<Skeleton className="w-[200] h-[10px] rounded-full" />
 					) : (
 						<p className="text-lg font-medium">
