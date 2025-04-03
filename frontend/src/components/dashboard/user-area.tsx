@@ -35,12 +35,12 @@ export default function UserArea() {
 			description: "You have successfully logged out! Redirecting...",
 		});
 		removeCookie("user_id", cookieOptions);
-		router.push("/login");
+		router.replace("/login");
 	};
 
 	useEffect(() => {
 		if (!userId) {
-			router.push("/login");
+			router.replace("/login");
 		}
 	}, [userId, router]);
 

@@ -50,7 +50,7 @@ export default function LoginForm() {
 				description: "You have successfully logged in! Redirecting...",
 			});
 			setCookie("user_id", data?.data?.user_id, { ...cookieOptions });
-			router.push("/");
+			router.replace("/");
 			form.reset();
 		},
 		onError(error) {
