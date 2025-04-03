@@ -19,19 +19,18 @@ const URLs = {
 export default function UserArea() {
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const [cookies, _setCookie, removeCookie] = useCookies<string>(["user_id"]);
+
 	const router = useRouter();
 
 	const user_id = cookies.user_id;
 	const url = user_id
 		? `${URLs.get}${buildURLSearchParams({ user_id: user_id })}`
 		: null;
-	const { data, isLoading } = useBackendQuery<IResponse<IUserResponse>>(
-		url,
-		{
-			revalidateOnFocus: false,
-			refreshInterval: 900000, // 15 min refresh interval
-		},
-	);
+
+	const { data, isLoading } = useBackendQuery<IResponse<IUserResponse>>(url, {
+		revalidateOnFocus: false,
+		refreshInterval: 900000, // 15 min refresh interval
+	});
 
 	const onLogout = () => {
 		removeCookie("user_id", cookieOptions);
