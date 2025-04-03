@@ -33,6 +33,10 @@ export interface ISubscribeRequest {
 	year: string;
 }
 
+export interface ISearchResponse {
+	Items: MusicItem[];
+}
+
 export interface IResponse<T> {
 	statusCode?: number;
 	data?: T;

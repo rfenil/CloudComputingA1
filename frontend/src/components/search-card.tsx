@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { useBackendMutation } from "@/hooks/useMutations";
 import buildURLSearchParams from "@/lib/buildURLSearchParams";
 import revalidate from "@/lib/revalidate";
@@ -8,45 +7,44 @@ import Image from "next/image";
 import React from "react";
 import { Cookies } from "react-cookie";
 import { toast } from "sonner";
+import { Button } from "./ui/button";
 
-interface ISubscriptionCardProps {
+interface ISearchCardProps {
 	item: MusicItem;
 }
 
 const URLs = {
 	get: "/subscribed",
-	post: "/unsubscribe",
+	post: "/subscribe",
 };
 
-export default function SubscriptionCard({ item }: ISubscriptionCardProps) {
+export default function SearchCard({ item }: ISearchCardProps) {
 	const { trigger, isMutating } = useBackendMutation(URLs.post, {
 		onSuccess() {
 			const user_id = new Cookies().get("user_id");
-			revalidate(`${URLs.get}${buildURLSearchParams({ user_id })}`);
-			toast.success("Subscription removed", {
-				description: `You have unsubscribed from ${item.title} by ${item.artist}.`,
+			revalidate(`${URLs.get}${buildURLSearchParams({ user_id: user_id })}`);
+			toast.success("Subscription Successful", {
+				description: `You are now subscribed to "${item.title}" by ${item.artist}.`,
 			});
 		},
 		onError(error) {
-			toast.error("Error removing subscription", {
+			toast.error("Subscription Failed", {
 				description:
-					error.message ||
-					"Failed to unsubscribe from this song. Please try again.",
+					error.message || "An unexpected error occurred during subscription.",
 			});
 		},
 	});
-
-	const onRemoveClick = async () => {
+	const onSubscribe = async () => {
 		const user_id = new Cookies().get("user_id");
 		await trigger({
 			user_id: user_id,
 			artist: item.artist,
-			album: item.album,
 			title: item.title,
+			album: item.album,
 			year: item.year,
+			img_url: item.img_url,
 		});
 	};
-
 	return (
 		<div className="border rounded-lg p-4 flex flex-col sm:flex-row gap-4">
 			<div className="relative w-24 h-24 flex-shrink-0 mx-auto sm:mx-0">
@@ -65,13 +63,13 @@ export default function SubscriptionCard({ item }: ISubscriptionCardProps) {
 					<p>Year: {item.year}</p>
 				</div>
 				<Button
-					variant="destructive"
+					variant="secondary"
 					size="sm"
-					onClick={onRemoveClick}
+					onClick={onSubscribe}
 					disabled={isMutating}
 				>
 					{isMutating && <Loader2 className="animate-spin" />}
-					Remove
+					Subscribe
 				</Button>
 			</div>
 		</div>
