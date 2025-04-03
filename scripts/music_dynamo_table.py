@@ -1,8 +1,6 @@
 import boto3
 from pydantic import BaseModel, Field
 from botocore.exceptions import ClientError
-from boto3.dynamodb.conditions import Key
-from typing import Optional, Tuple, List
 
 AWS_REGION = "us-east-1"
 MUSIC_TABLE_NAME = "music"
@@ -24,10 +22,9 @@ class MusicDynamoDBOperations:
         self.table = None
 
     def table_exists(self):
-        """Check if the table already exists."""
         try:
             table = self.dynamodb.Table(self.table_name)
-            table.load()  # Raises an exception if the table doesn't exist
+            table.load() 
             return True
         except ClientError as e:
             if e.response['Error']['Code'] == 'ResourceNotFoundException':
