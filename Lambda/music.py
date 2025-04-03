@@ -45,7 +45,7 @@ class MusicService:
             table,
             title: Optional[str] = None,
             artist: Optional[str] = None,
-            year: Optional[int] = None,
+            year: Optional[str] = None,
             album: Optional[str] = None
     ) -> Optional[Dict[str, Any]]:
         response = None
@@ -60,7 +60,7 @@ class MusicService:
                 logger.info(f"ArtistYear Index selected.")
                 index_name = 'ArtistYearIndex'
                 key_condition_expression = Key('artist').eq(
-                    artist) & Key('year').eq(year)
+                    artist) & Key('year').eq(int(year))
             elif title and album:
                 logger.info(f"TitleAlbum Index selected.")
                 index_name = 'TitleAlbumIndex'
@@ -79,7 +79,7 @@ class MusicService:
                 filter_expression = Attr('album#title').begins_with(album)
             if year and not (artist and year):
                 logger.info(f"Year based filter expression")
-                filter_expression = Attr('year').eq(year)
+                filter_expression = Attr('year').eq(int(year))
             if artist and not (artist and year) and not (artist and album):
                 logger.info(f"Artist based filter expression")
                 key_condition_expression = Key('artist').eq(artist)
@@ -172,6 +172,7 @@ class MusicService:
             album: str = self.body['album']
             title: str = self.body['title']
             year: int = int(self.body.get('year'))
+            img_url: str = self.body['img_url']
 
             if not user_id or not artist or not album or not title:
                 logger.warning("user_id, artist, album, and title are required")
@@ -196,7 +197,7 @@ class MusicService:
             user = user_response['Item']
             subscriptions = user.get('subscription', [])
 
-            song_identifier = {'artist': artist, 'album': album, 'title': title, 'year': year}
+            song_identifier = {'artist': artist, 'album': album, 'title': title, 'year': year, 'img_url': img_url}
 
             if any(sub['artist'] == artist and sub['album'] == album and sub['title'] == title for sub in subscriptions):
                 logger.warning("User is already subscribed to the music.")

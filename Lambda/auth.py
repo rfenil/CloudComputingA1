@@ -3,6 +3,7 @@ import hashlib
 import boto3
 from boto3.dynamodb.conditions import Key
 import logging
+from decimal import Decimal
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -10,6 +11,11 @@ logger.setLevel(logging.INFO)
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('users')
 
+
+def decimal_converter(obj):
+    if isinstance(obj, Decimal):
+        return int(obj) if obj % 1 == 0 else float(obj)
+    raise TypeError
 
 class AuthService:
 
@@ -31,7 +37,7 @@ class AuthService:
             'body': json.dumps({
                 'data': data,
                 'message': message
-            })
+            }, default=decimal_converter)
         }
 
     def _get_user_by_email(self, email: str) -> dict:
