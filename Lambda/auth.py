@@ -39,10 +39,10 @@ class AuthService:
             logger.info(f"Querying user by email: {email}")
             response = table.get_item(Key={'email': email})
             logger.info(f"Query response: {response}")
-            if response.get('Items'):
+            if response.get('Item'):
                 logger.info("User found in table. ")
-                return response['Items'][0]
-                return response['Items'][-1]
+                return response['Item']
+
             else:
                 logger.warning("User not found in table.")
                 return None
