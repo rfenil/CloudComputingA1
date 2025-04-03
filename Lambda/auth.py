@@ -37,12 +37,11 @@ class AuthService:
     def _get_user_by_email(self, email: str) -> dict:
         try:
             logger.info(f"Querying user by email: {email}")
-            response = table.query(
-                IndexName="EmailIndex",
-                KeyConditionExpression=Key('email').eq(email))
-            if response.get('Items'):
-                logger.info("User found in table.")
-                return response['Items'][-1]
+            response = table.get_item(Key={'email': email})
+            logger.info(f"Query response: {response}")
+            if response.get('Item'):
+                logger.info("User found in table. ")
+                return response['Item']
             else:
                 logger.warning("User not found in table.")
                 return None
@@ -53,9 +52,7 @@ class AuthService:
     def _check_email_exists(self, email: str) -> bool:
         try:
             logger.info(f"Checking if email exists: {email}")
-            response = table.query(
-                IndexName='EmailIndex',
-                KeyConditionExpression=Key('email').eq(email))
+            response = table.get_item(Key={'email': email})
             return 'Items' in response and len(response['Items']) > 0
         except Exception as error:
             logger.error(f"Error checking email exists: {error}")
@@ -125,12 +122,12 @@ class AuthService:
             query_params = self.event.get('queryStringParameters')
             email = query_params.get('email') if query_params else None
             logger.info(f"Query parameters: {query_params}")
-            if not email:
+            if not user_id:
                 logger.warning("Missing email in query parameters.")
                 return self._generate_response(400, "Missing user_id in query parameters")
-            logger.info(f"Email ID: {email}")
-            user = self._get_user_by_email(email)
-            
+            logger.info(f"Email ID: {user_id}")
+            user = self._get_user_by_email(user_id)
+           
             if not user:
                 logger.warning("User not found.")
                 return self._generate_response(404, "User not found")
@@ -168,7 +165,6 @@ def lambda_handler(event, context):
         elif path == "/register" and httpMethod == 'POST':
             return auth.register()
         elif path == "/user" and httpMethod == 'GET':
-            logger.info("GET USER")
             return auth.get_user()
         else:
             logger.warning("Invalid path or method.")

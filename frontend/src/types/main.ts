@@ -19,12 +19,18 @@ export interface IMusicRequest {
 
 export interface IUnsubscribeRequest {
 	user_id: string;
-	song_id: string;
+	title: string;
+	album: string;
+	artist: string;
+	year: string;
 }
 
 export interface ISubscribeRequest {
 	user_id: string;
-	song_id: string;
+	title: string;
+	album: string;
+	artist: string;
+	year: string;
 }
 
 export interface IResponse<T> {

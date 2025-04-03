@@ -10,7 +10,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'a1-projectgroup-31-krish.s3.us-east-1.amazonaws.com',
+        hostname: 'a1-projectgroup-31-group.s3.us-east-1.amazonaws.com',
         port: '',
         pathname: '/**',
       },

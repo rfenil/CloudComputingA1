@@ -6,7 +6,7 @@ import React from "react";
 
 export default function QueryArea() {
 	return (
-		<Card className="h-[600px] overflow-auto">
+		<Card className="h-[700px] overflow-auto">
 			<CardHeader>
 				<CardTitle>Search Music</CardTitle>
 			</CardHeader>
