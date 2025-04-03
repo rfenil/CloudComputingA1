@@ -5,6 +5,7 @@ from uuid import uuid4
 from boto3.dynamodb.conditions import Key, Attr
 import logging
 from typing import Optional, Dict, Any
+from decimal import Decimal
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -13,6 +14,10 @@ dynamodb = boto3.resource('dynamodb')
 music_table = dynamodb.Table('music')
 users_table = dynamodb.Table('users')
 
+def decimal_converter(obj):
+    if isinstance(obj, Decimal):
+        return int(obj) if obj % 1 == 0 else float(obj)
+    raise TypeError
 
 class MusicSearvice:
 
@@ -32,7 +37,7 @@ class MusicSearvice:
             'body': json.dumps({
                 'data': data,
                 'message': message
-            })
+            }, default=decimal_converter)
         }
 
     def _filter_search(
@@ -63,11 +68,11 @@ class MusicSearvice:
                 key_condition_expression = Key('artist').eq(
                     artist) & Key('album#title').begins_with(album)
 
-            if title and not (title and album):  # avoid duplicate filter
+            if title and not (title and album):  
                 filter_expression = Attr('title').eq(title)
             if album and not (title and album) and not (artist and album):
                 filter_expression = Attr('album#title').begins_with(album)
-            if year and not (artist and year):  # avoid duplicate filter
+            if year and not (artist and year):  
                 filter_expression = Attr('year').eq(year)
             if artist and not (artist and year) and not (artist and album):
                 key_condition_expression = Key('artist').eq(artist)
@@ -95,7 +100,7 @@ class MusicSearvice:
                     "No specific criteria provided.  Performing a full table scan.  This is inefficient for large tables.")
                 scan_kwargs = {}
                 response = table.scan(**scan_kwargs)
-
+            logger.info(f"Query response: {response.get('Items', [])}")
             return {
                 'Items': response.get('Items', []),
             } if response else {'Items': []}
@@ -112,10 +117,11 @@ class MusicSearvice:
             year = query_params.get('year', None)
 
             search_response = self._filter_search(music_table, title, artist, year, album)
-            self._generate_response(200, "Got it", search_response)
+            return self._generate_response(200, "Search results", search_response)
 
         except Exception as error:
-            print(error)
+            return self._generate_response(500, "Error while filtering the music")
+        
     def get_subscribed_songs(self):
         try:
             query_params = self.event.get('queryStringParameters')
@@ -126,7 +132,7 @@ class MusicSearvice:
 
             logger.info("Request body validation done")
 
-            user_response = users_table.get_item(Key={'id': user_id})
+            user_response = users_table.get_item(Key={'email': user_id})
             if 'Item' not in user_response:
                 return self._generate_response(400, 'User not found')
 
@@ -138,30 +144,10 @@ class MusicSearvice:
             if not subscriptions:
                 return self._generate_response(200, 'No subscribed songs found', data=[])
 
-            subscribed_songs = []
-            for song_id in subscriptions:
-                song_response = music_table.get_item(Key={'id': song_id})
-                if 'Item' in song_response:
-                    song = song_response['Item']
-                    subscribed_songs.append({
-                        'id': song.get('id'),
-                        'title': song.get('title'),
-                        'artist': song.get('artist'),
-                        'album': song.get('album'),
-                        'img_url': song.get('img_url'),
-                        'year': song.get('year')
-                    })
-                else:
-                    logger.warning(
-                        f"Song {song_id} in subscriptions not found in songs table")
-
-            logger.info(
-                f"Retrieved {len(subscribed_songs)} subscribed songs for user {user_id}")
-
             return self._generate_response(
                 200,
-                f"Successfully retrieved {len(subscribed_songs)} subscribed songs",
-                data=subscribed_songs
+                f"Successfully retrieved {len(subscriptions)} subscribed songs",
+                data=subscriptions
             )
 
         except Exception as error:
@@ -171,44 +157,50 @@ class MusicSearvice:
     def subscribe(self):
         try:
             user_id: str = self.body['user_id']
-            song_id: str = self.body['song_id']
+            artist: str = self.body['artist']
+            album: str = self.body['album']
+            title: str = self.body['title']
+            year: int = int(self.body.get('year')) 
 
             # Validate input
-            if not user_id or not song_id:
-                return self._generate_response(400, 'user_id and song_id are required')
+            if not user_id or not artist or not album or not title:
+                return self._generate_response(400, 'user_id, artist, album, and title are required')
 
             logger.info("Request body validation")
 
-            user_response = users_table.get_item(Key={'id': user_id})
+            user_response = users_table.get_item(Key={'email': user_id})
             if 'Item' not in user_response:
                 return self._generate_response(400, 'User not found')
 
             logger.info(f"User with id {user_id} found")
 
-            song_response = music_table.get_item(Key={'id': song_id})
+            song_response = music_table.get_item(Key={'artist': artist, 'album#title': f"{album}#{title}"})
             if 'Item' not in song_response:
                 return self._generate_response(404, 'Song not found')
 
-            logger.info("Song with id {song_id} found")
+            logger.info(f"Song with artist {artist}, album {album}, and title {title} found")
 
             user = user_response['Item']
-            subscriptions = user.get('subscription', set())
-            if song_id in subscriptions:
+            subscriptions = user.get('subscription', [])  # Initialize as list if not present
+
+            song_identifier = {'artist': artist, 'album': album, 'title': title, 'year': year}
+
+            if any(sub['artist'] == artist and sub['album'] == album and sub['title'] == title for sub in subscriptions):
                 return self._generate_response(400, 'User is already subscribed to the music.')
 
             logger.info("Song not subscribed.")
 
             users_table.update_item(
-                Key={'id': user_id},
-                UpdateExpression='SET subscription = list_append(if_not_exists(subscription, :empty_list), :song_id)',
+                Key={'email': user_id},
+                UpdateExpression='SET subscription = list_append(if_not_exists(subscription, :empty_list), :song_data)',
                 ExpressionAttributeValues={
-                    ':song_id': [song_id],
+                    ':song_data': [song_identifier],
                     ':empty_list': []
                 },
                 ReturnValues='UPDATED_NEW'
             )
 
-            logger.info(f"User {user_id} subscribed to song {song_id}")
+            logger.info(f"User {user_id} subscribed to song {artist} - {album} - {title}")
 
             return self._generate_response(200, 'Successfully subscribed user to the song')
 
@@ -219,43 +211,51 @@ class MusicSearvice:
     def unsubscribe(self):
         try:
             user_id: str = self.body['user_id']
-            song_id: str = self.body['song_id']
+            artist: str = self.body['artist']
+            album: str = self.body['album']
+            title: str = self.body['title']
+            year: int = int(self.body['year'])
 
-            if not user_id or not song_id:
-                return self._generate_response(400, 'user_id and song_id are required')
+            if not user_id or not artist or not album or not title:
+                return self._generate_response(400, 'user_id, artist, album, and title are required')
 
             logger.info("Request body validation done")
 
-            user_response = users_table.get_item(Key={'id': user_id})
+            user_response = users_table.get_item(Key={'email': user_id})
             if 'Item' not in user_response:
                 return self._generate_response(400, 'User not found')
 
             logger.info(f"User with id {user_id} found")
 
-            song_response = music_table.get_item(Key={'id': song_id})
+            song_response = music_table.get_item(Key={'artist': artist, 'album#title': f"{album}#{title}"})
             if 'Item' not in song_response:
                 return self._generate_response(404, 'Song not found')
 
-            logger.info(f"Song with id {user_id} found")
+            logger.info(f"Song with artist {artist}, album {album}, and title {title} found")
 
             user = user_response['Item']
-            subscriptions = user.get('subscription', set())
-            if song_id not in subscriptions:
+            subscriptions = user.get('subscription', [])  # Initialize as list
+
+
+            def matches(sub):
+                return sub['artist'] == artist and sub['album'] == album and sub['title'] == title and sub['year'] == year
+
+            try:
+                matching_sub = next(sub for sub in subscriptions if matches(sub))
+                subscriptions.remove(matching_sub)
+
+                users_table.update_item(
+                    Key={'email': user_id},
+                    UpdateExpression='SET subscription = :subscriptions',
+                    ExpressionAttributeValues={':subscriptions': subscriptions},
+                    ReturnValues='UPDATED_NEW'
+                )
+                logger.info(f"User {user_id} unsubscribed from song {artist} - {album} - {title}")
+                return self._generate_response(200, 'Successfully unsubscribed user from the song')
+
+            except StopIteration:
+                logger.info("User is not subscribed to the song")
                 return self._generate_response(400, 'User is not subscribed to the song')
-
-            logger.info("Song already subscribed")
-
-            subscriptions.remove(song_id)
-
-            users_table.update_item(
-                Key={'id': user_id},
-                UpdateExpression='SET subscription = :subscriptions',
-                ExpressionAttributeValues={':subscriptions': subscriptions},
-                ReturnValues='UPDATED_NEW'
-            )
-
-            logger.info(f"User {user_id} unsubscribed from song {song_id}")
-            return self._generate_response(200, 'Successfully unsubscribed user from the song')
 
         except Exception as error:
             logging.error(f"Error in unsubscribe: {error}")
@@ -271,7 +271,7 @@ def lambda_handler(event, context):
         body = json.loads(raw_body) if isinstance(raw_body, str) else {}
         music = MusicSearvice(event, context, body)
 
-        if path == "/" and httpMethod == 'GET':
+        if path == "/search" and httpMethod == 'GET':
             return music.get_songs()
         elif path == "/subscribe" and httpMethod == 'POST':
             return music.subscribe()
