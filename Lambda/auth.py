@@ -42,7 +42,6 @@ class AuthService:
             if response.get('Item'):
                 logger.info("User found in table. ")
                 return response['Item']
-
             else:
                 logger.warning("User not found in table.")
                 return None
@@ -121,14 +120,14 @@ class AuthService:
         try:
             logger.info("Getting user")
             query_params = self.event.get('queryStringParameters')
-            user_id = query_params.get('user_id') if query_params else None
+            email = query_params.get('email') if query_params else None
             logger.info(f"Query parameters: {query_params}")
             if not user_id:
                 logger.warning("Missing email in query parameters.")
                 return self._generate_response(400, "Missing user_id in query parameters")
             logger.info(f"Email ID: {user_id}")
             user = self._get_user_by_email(user_id)
-            
+           
             if not user:
                 logger.warning("User not found.")
                 return self._generate_response(404, "User not found")
