@@ -49,7 +49,9 @@ export default function SearchContainer() {
   const onSubmit = (values: z.infer<typeof musicSearchSchema>) => {
     try {
       const filteredValues = Object.fromEntries(
-        Object.entries(values).filter(([_, value]) => value !== "")
+        Object.entries(values)
+          .map(([key, value]) => [key, typeof value === "string" ? value.trim() : value])
+          .filter(([_, value]) => value !== "")
       );
 
       if (Object.keys(filteredValues).length === 0) {
