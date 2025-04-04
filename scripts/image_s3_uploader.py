@@ -148,8 +148,7 @@ def process_songs_json():
                         response = requests.get(song.img_url, timeout=10)
                         response.raise_for_status()
 
-                        image_name = f"{song.artist}_{song.album}_{song.title}.jpg".replace(
-                            " ", "_")
+                        image_name = f"{song.artist}_{song.album}_{song.title}.jpg".replace(" ", "_").replace("/", "_").replace("\\", "_").replace("#", "_")
                         print(
                             f"INFO: Uploading image for '{song.title}' as '{image_name}' to S3 bucket '{S3_BUCKET_NAME}'")
                         s3_url = upload_image_to_s3_bucket(
