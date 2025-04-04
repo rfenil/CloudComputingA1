@@ -66,7 +66,7 @@ class UserDynamoDBOperations:
                 'email': user.email,
                 'username': user.username,
                 'password': user.password,
-                'subscription': set(user.subscription)
+                'subscription': list(set(user.subscription))
             }
             self.table.put_item(Item=item)
             print(f"SUCCESS: Inserted User data for '{user.username}'")
@@ -96,7 +96,7 @@ def insert_sample_users(user_ops: UserDynamoDBOperations):
         for user in sample_users:
             user_ops.insert_user_data(user)
     except Exception as error:
-        print(f"Error: Failed to insert sample user data: {str(e)}")
+        print(f"Error: Failed to insert sample user data: {str(error)}")
         raise error
 
 if __name__ == "__main__":
