@@ -1,4 +1,5 @@
 import boto3
+import hashlib
 from pydantic import BaseModel, Field
 from botocore.exceptions import ClientError
 import random
@@ -8,7 +9,7 @@ USER_TABLE_NAME = "users"
 
 class UserItem(BaseModel):
     username: str = Field(..., description="Username")
-    email: str = Field(..., description="Email") # Primary Key
+    email: str = Field(..., description="Email")
     password: str = Field(..., description="Password")
     subscription: list[str] = Field(default_factory=list, description="List of user subscriptions")
 
@@ -65,7 +66,7 @@ class UserDynamoDBOperations:
                 'email': user.email,
                 'username': user.username,
                 'password': user.password,
-                'subscription': list(set(user.subscription))  #Stores object as sets
+                'subscription': set(user.subscription)
             }
             self.table.put_item(Item=item)
             print(f"SUCCESS: Inserted User data for '{user.username}'")
@@ -74,24 +75,29 @@ class UserDynamoDBOperations:
             raise e
 
 def insert_sample_users(user_ops: UserDynamoDBOperations):
-    sample_usernames = [
-        "Prajwal Manjunath", "Emma Miller", "Krish Parekh", "Sophia Smith", "James Johnson",
-        "Sophia Davis", "John Williams", "Michael Williams", "Divyam Juneja", "David Lee"
-    ]
+    try:
+        sample_usernames = [
+            "Prajwal Manjunath", "Emma Miller", "Krish Parekh", "Sophia Smith", "James Johnson",
+            "Sophia Davis", "John Williams", "Michael Williams", "Divyam Juneja", "David Lee"
+        ]
 
-    sample_users = []
-    base_id = 406250700
+        sample_users = []
+        base_id = 406250700
 
-    for i, username in enumerate(sample_usernames):
-        student_id = base_id + i 
-        email = f"s{student_id}@student.rmit.edu.au"
-        full_username = f"{username}{i}"
-        password = str(random.randint(100000, 999999))
-        user = UserItem(username=full_username, email=email, password=password, subscription=[])
-        sample_users.append(user)
-    
-    for user in sample_users:
-        user_ops.insert_user_data(user)
+        for i, username in enumerate(sample_usernames):
+            student_id = base_id + i 
+            email = f"s{student_id}@student.rmit.edu.au"
+            full_username = f"{username}{i}"
+            password = str(random.randint(100000, 999999))
+            hashed_password = hashlib.sha256(password.encode()).hexdigest()
+            user = UserItem(username=full_username, email=email, password=hashed_password, subscription=[])
+            sample_users.append(user)
+        
+        for user in sample_users:
+            user_ops.insert_user_data(user)
+    except Exception as error:
+        print(f"Error: Failed to insert sample user data: {str(e)}")
+        raise error
 
 if __name__ == "__main__":
     try:

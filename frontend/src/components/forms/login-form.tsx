@@ -28,7 +28,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import { useCookies } from "react-cookie";
+import { Cookies } from "react-cookie";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type { z } from "zod";
@@ -40,7 +40,6 @@ const URLs = {
 export default function LoginForm() {
 	const router = useRouter();
 
-	const setCookie = useCookies<string>([])[1];
 	const { trigger, isMutating } = useBackendMutation<
 		ILoginRequest,
 		IResponse<ILoginResponse>
@@ -49,7 +48,9 @@ export default function LoginForm() {
 			toast.success("Login Successful", {
 				description: "You have successfully logged in! Redirecting...",
 			});
-			setCookie("user_id", data?.data?.user_id, { ...cookieOptions });
+			const user = data.data;
+			const cookie = new Cookies();
+			cookie.set("user_id", user?.user_id, { ...cookieOptions });
 			router.replace("/");
 			form.reset();
 		},
@@ -72,7 +73,17 @@ export default function LoginForm() {
 	const togglePassword = () => setShowPassword((prev) => !prev);
 
 	const onSubmit = async (data: z.infer<typeof loginSchema>) => {
-		await trigger({ email: data.email, password: data.password });
+		try {
+			const loginData = {
+				email: data.email,
+				password: data.password,
+			};
+			await trigger(loginData);
+		} catch {
+			toast.error("Error", {
+				description: "Unexpected error occured during login.",
+			});
+		}
 	};
 
 	return (

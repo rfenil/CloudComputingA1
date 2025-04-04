@@ -3,6 +3,7 @@ import hashlib
 import boto3
 from boto3.dynamodb.conditions import Key
 import logging
+from decimal import Decimal
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -10,6 +11,11 @@ logger.setLevel(logging.INFO)
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('users')
 
+
+def decimal_converter(obj):
+    if isinstance(obj, Decimal):
+        return int(obj) if obj % 1 == 0 else float(obj)
+    raise TypeError
 
 class AuthService:
 
@@ -31,14 +37,13 @@ class AuthService:
             'body': json.dumps({
                 'data': data,
                 'message': message
-            })
+            }, default=decimal_converter)
         }
 
     def _get_user_by_email(self, email: str) -> dict:
         try:
             logger.info(f"Querying user by email: {email}")
             response = table.get_item(Key={'email': email})
-            logger.info(f"Query response: {response}")
             if response.get('Item'):
                 logger.info("User found in table. ")
                 return response['Item']
@@ -64,16 +69,19 @@ class AuthService:
             email: str = self.body['email']
             password: str = self.body['password']
             logger.info(f"Login request for email: {email}")
+
             if not email or not password:
                 logger.warning("Missing email or password in request.")
                 return self._generate_response(400, "Missing required fields")
 
             user: dict = self._get_user_by_email(email)
+
             if user is None:
                 logger.warning("Login failed: Invalid email.")
                 return self._generate_response(401, "Invalid Credentials")
 
             hashed_password = hashlib.sha256(password.encode()).hexdigest()
+
             if user.get('password') != hashed_password:
                 logger.warning("Login failed: Invalid password.")
                 return self._generate_response(401, "Invalid Credentials")
@@ -93,15 +101,18 @@ class AuthService:
             username: str = self.body['username']
             password: str = self.body['password']
 
-            logger.info(f"Registration data received: email={email}, username={username}")
+            logger.info(
+                f"Registration data received: email={email}, username={username}")
             if not email or not username or not password:
+                logger.warning(f"Missing required fields for registrations")
                 return self._generate_response(400, 'Missing required fields')
 
             if self._check_email_exists(email):
+                logger.warning(f"User already exist for registration.")
                 return self._generate_response(409, 'User already exists')
 
             hashed_password = hashlib.sha256(password.encode()).hexdigest()
-            logger.info("Saving user to DynamoDB.")
+
             table.put_item(
                 Item={
                     'email': email,
@@ -109,41 +120,41 @@ class AuthService:
                     'password': hashed_password,
                     'subscription': []
                 })
+            
             logger.info(f"User registered successfully: {email}")
             return self._generate_response(201, 'User created successfully',
                                            {'user_id': email})
         except Exception as error:
             logger.error(f"Error during registration: {error}")
             return self._generate_response(500, "Internal Server Error")
-    
+
     def get_user(self) -> dict:
         try:
             logger.info("Getting user")
             query_params = self.event.get('queryStringParameters')
-            email = query_params.get('email') if query_params else None
-            logger.info(f"Query parameters: {query_params}")
+            user_id = query_params.get('user_id') if query_params else None
+
+            logger.info(f"Getting user for user_id {user_id}")
+
             if not user_id:
                 logger.warning("Missing email in query parameters.")
                 return self._generate_response(400, "Missing user_id in query parameters")
-            logger.info(f"Email ID: {user_id}")
+
             user = self._get_user_by_email(user_id)
-           
+
             if not user:
                 logger.warning("User not found.")
                 return self._generate_response(404, "User not found")
 
-            logger.info(f"Got the respons for the user")
-            
-            
             user_data = {
                 'email': user['email'],
                 'username': user['username'],
-                'subscriptions': user.get('subscription', []) 
+                'subscriptions': user.get('subscription', [])
             }
-            
+
             logger.info("User retrieved successfully.")
             return self._generate_response(200, "User retrieved successfully", user_data)
-            
+
         except Exception as error:
             logger.error(f"Error retrieving user: {error}")
             return self._generate_response(500, "Internal Server Error")
@@ -154,11 +165,10 @@ def lambda_handler(event, context):
         httpMethod = event.get('httpMethod', '')
         path = event.get('path')
         logger.info(f"PATH = {path}, HTTP_METHOD = {httpMethod}")
+
         raw_body = event.get('body')
         body = json.loads(raw_body) if isinstance(raw_body, str) else {}
         auth = AuthService(event, context, body)
-
-        logger.info(f"Body: {body}")
 
         if path == "/login" and httpMethod == 'POST':
             return auth.login()
@@ -168,16 +178,7 @@ def lambda_handler(event, context):
             return auth.get_user()
         else:
             logger.warning("Invalid path or method.")
-            return {
-                'statusCode': 400,
-                "headers": {
-                    "Access-Control-Allow-Origin": "*",
-                    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-                    "Access-Control-Allow-Headers":
-                    "Content-Type, Authorization"
-                },
-                'body': json.dumps({'message': 'Invalid action type'})
-            }
+            return auth._generate_response(400, 'Invalid action type')
 
     except Exception as error:
         logger.error(f"Error in lambda handler: {error}")

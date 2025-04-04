@@ -1,6 +1,6 @@
 "use client";
 
-import QueryForm from "@/components/forms/query-form";
+import SearchContainer from "@/components/search-container";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import React from "react";
 
@@ -11,7 +11,7 @@ export default function QueryArea() {
 				<CardTitle>Search Music</CardTitle>
 			</CardHeader>
 			<CardContent>
-				<QueryForm />
+				<SearchContainer />
 			</CardContent>
 		</Card>
 	);

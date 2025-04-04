@@ -16,7 +16,6 @@ def create_private_s3_bucket(bucket_name: str, region_name: str):
     try:
         s3 = boto3.client("s3", region_name=region_name)
 
-        # Check if the bucket already exists
         response = s3.list_buckets()
         bucket_exists = any(
             bucket['Name'] == bucket_name for bucket in response['Buckets']
@@ -39,17 +38,6 @@ def create_private_s3_bucket(bucket_name: str, region_name: str):
                 )
 
             print(f"SUCCESS: Created private S3 bucket '{bucket_name}'")
-
-        # Ensure public access block allows public reads
-        s3.put_public_access_block(
-            Bucket=bucket_name,
-            PublicAccessBlockConfiguration={
-                'BlockPublicAcls': False,
-                'IgnorePublicAcls': False,
-                'BlockPublicPolicy': False,  # Allow public read access via policy
-                'RestrictPublicBuckets': False, 
-            },
-        )
 
         # Apply a bucket policy to allow public reads on objects
         bucket_policy = {
