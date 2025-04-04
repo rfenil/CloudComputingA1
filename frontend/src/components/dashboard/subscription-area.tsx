@@ -8,6 +8,7 @@ import type { IResponse, MusicItem } from "@/types/main";
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React from "react";
 import { useCookies } from "react-cookie";
+import EmptySubscriptionState from "../empty-subscription-area";
 
 const URLs = {
 	get: "/subscribed",
@@ -22,7 +23,7 @@ export default function SubscriptionArea() {
 		: null;
 
 	const { data } = useBackendQuery<IResponse<MusicItem[]>>(url);
-
+	const hasSubscriptions = data?.data && data.data.length > 0
 	return (
 		<Card className="h-[700px] overflow-auto">
 			<CardHeader>
@@ -30,10 +31,14 @@ export default function SubscriptionArea() {
 			</CardHeader>
 			<CardContent>
 				<div className="space-y-4">
-					{data?.data?.map((item) => {
-						const key = `${item.artist}#${item.album}#${item.title}`;
-						return <SubscriptionCard key={key} item={item} />;
-					})}
+					{hasSubscriptions ? (
+						data?.data?.map((item) => {
+							const key = `${item.artist}#${item.album}#${item.title}`;
+							return <SubscriptionCard key={key} item={item} />;
+						})
+					) : (
+						<EmptySubscriptionState />
+					)}
 				</div>
 			</CardContent>
 		</Card>
