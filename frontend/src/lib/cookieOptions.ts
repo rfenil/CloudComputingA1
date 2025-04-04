@@ -2,6 +2,5 @@
 export const cookieOptions = {
 	path: "/",
 	sameSite: "lax" as const,
-	secure: true,
 	domain: global.window?.location.hostname,
 };
