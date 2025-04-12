@@ -6,50 +6,45 @@ from typing import Dict
 from music_dynamo_table import MusicDynamoDBOperations, MusicItem
 
 # AWS S3 Bucket Configuration
-S3_BUCKET_NAME = "a1-projectgroup-31-group"
+S3_BUCKET_NAME = "a1-project-group-31"
 AWS_REGION = "us-east-1"
 
 # JSON FILE
 SONG_JSON_FILE_NAME = "./2025a1.json"
 
 
-def create_private_s3_bucket(bucket_name: str, region_name: str):
+def create_public_s3_bucket(bucket_name: str, region_name: str):
     try:
         s3 = boto3.client("s3", region_name=region_name)
-
         response = s3.list_buckets()
         bucket_exists = any(
             bucket['Name'] == bucket_name for bucket in response['Buckets']
         )
-
         if bucket_exists:
-            print(f"INFO: S3 bucket '{bucket_name}' already exists")
+            print(f"INFO: S3 bucket '{bucket_name}' already exists.  Configuring it...")
         else:
             if region_name == "us-east-1":
                 s3.create_bucket(
                     Bucket=bucket_name,
-                    ACL='private',
                 )
             else:
                 location = {'LocationConstraint': region_name}
                 s3.create_bucket(
                     Bucket=bucket_name,
-                    ACL='private',
                     CreateBucketConfiguration=location
                 )
-
-            print(f"SUCCESS: Created private S3 bucket '{bucket_name}'")
+            print(f"SUCCESS: Created S3 bucket '{bucket_name}' in {region_name}")
 
         s3.put_public_access_block(
             Bucket=bucket_name,
             PublicAccessBlockConfiguration={
                 'BlockPublicAcls': False,
                 'IgnorePublicAcls': False,
-                'BlockPublicPolicy': False, 
+                'BlockPublicPolicy': False,
                 'RestrictPublicBuckets': False,
-            },
+            }
         )
-
+        print(f"SUCCESS: Disabled public access block for bucket '{bucket_name}'")
         bucket_policy = {
             "Version": "2012-10-17",
             "Statement": [
@@ -58,22 +53,17 @@ def create_private_s3_bucket(bucket_name: str, region_name: str):
                     "Effect": "Allow",
                     "Principal": "*",
                     "Action": "s3:GetObject",
-                    "Resource": f"arn:aws:s3:::{bucket_name}/*"
+                    "Resource": f"arn:aws:s3:::{bucket_name}/*",
                 }
             ]
         }
-
         s3.put_bucket_policy(
             Bucket=bucket_name,
-            Policy=json.dumps(bucket_policy)
+            Policy=json.dumps(bucket_policy),
         )
-
-        print(
-            f"SUCCESS: Public read access enabled for objects in '{bucket_name}'"
-        )
-
+        print(f"SUCCESS: Applied public read policy to bucket '{bucket_name}'")
     except Exception as e:
-        print(f"ERROR: Failed to create S3 bucket '{bucket_name}': {str(e)}")
+        print(f"ERROR: Failed to create/configure public S3 bucket '{bucket_name}': {e}")
         raise e
 
 
@@ -200,7 +190,7 @@ if __name__ == "__main__":
         print("INFO: Starting song processing application")
         print(
             f"INFO: Creating/verifying S3 bucket '{S3_BUCKET_NAME}' in {AWS_REGION}")
-        create_private_s3_bucket(S3_BUCKET_NAME, AWS_REGION)
+        create_public_s3_bucket(S3_BUCKET_NAME, AWS_REGION)
 
         print("INFO: Starting song JSON processing")
         process_songs_json()
