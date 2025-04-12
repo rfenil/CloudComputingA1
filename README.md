@@ -155,5 +155,5 @@ The following endpoints are configured in the API Gateway:
     ```bash
     npm run build
     ```bash
-    pm2 start npm --name "nextjs-app" -- start
+    pm2 start npm --name "music-subscription-app" -- start
     ````

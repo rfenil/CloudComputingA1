@@ -1,7 +1,5 @@
 import json
-import hashlib
 import boto3
-from uuid import uuid4
 from boto3.dynamodb.conditions import Key, Attr
 import logging
 from typing import Optional, Dict, Any
