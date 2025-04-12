@@ -108,8 +108,11 @@ The following endpoints are configured in the API Gateway:
 
 4.  Create Next.js config on Nginx:
 
-````bash
+```bash
 sudo nano /etc/nginx/sites-available/nextjs
+```
+
+5. Reverse Proxy Config
 ```nginx
 server {
     listen 80;
@@ -124,35 +127,43 @@ server {
         proxy_cache_bypass $http_upgrade;
     }
 }
-````
+```
 
-Create a symbolic link:
+6. Create a symbolic link:
 
 ```bash
 sudo ln -s /etc/nginx/sites-available/nextjs /etc/nginx/sites-enabled/
 ```
 
-Test the configuration:
+7. Test the configuration:
 
 ```bash
 sudo nginx -t
 ```
 
-If the test is successful, reload Nginx:
+8. If the test is successful, reload Nginx:
 
 ```bash
 sudo systemctl reload nginx
 ```
 
-5.  Next.js configuration:
-````bash
+9.  Next.js configuration:
+```bash
 git clone <repo-url>
+```
+
 ```bash
 cd repo-directory
+```
+
 ```bash
 npm install; npm install -g pm2
+```
+
 ```bash
 npm run build
+```
+10. Using process manager to start the Next.JS application
 ```bash
 pm2 start npm --name "music-subscription-app" -- start
-````
+```
