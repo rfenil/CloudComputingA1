@@ -57,21 +57,21 @@ The following sections describe the deployment process for each component of the
 1.  First, we set up our data source, which is DynamoDB and the S3 bucket.
     Inside the `scripts` folder, we have a script called `user_dynamo_table.py` which creates a DynamoDB table called `users` and pushes 10 random users to the table.
 
-    ```bash
-    py user_dynamo_table.py
-    ```
+```bash
+py user_dynamo_table.py
+```
 
 2.  Then, we have a script called `music_dynamo_table.py` which creates a DynamoDB table called `music`. It won't push any data as we need to wait for the S3 bucket to be created first, since we store the path of the music files in the DynamoDB table.
 
-    ```bash
-    py music_dynamo_table.py
-    ```
+```bash
+py music_dynamo_table.py
+```
 
 3.  Then, we have a script called `image_s3_uploader.py` which will create the S3 bucket with public get access and upload the images to the S3 bucket, and also push the data into the music table.
 
-    ```bash
-    py image_s3_uploader.py
-    ```
+```bash
+py image_s3_uploader.py
+```
 
 ### Section 2: Lambda Functions
 
@@ -108,52 +108,51 @@ The following endpoints are configured in the API Gateway:
 
 4.  Create Next.js config on Nginx:
 
-    ````bash
-    sudo nano /etc/nginx/sites-available/nextjs
-    ```nginx
-    server {
-        listen 80;
-        server_name <elastic ip address>;
+````bash
+sudo nano /etc/nginx/sites-available/nextjs
+```nginx
+server {
+    listen 80;
+    server_name <elastic ip address>;
 
-        location / {
-            proxy_pass http://localhost:3000;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection 'upgrade';
-            proxy_set_header Host $host;
-            proxy_cache_bypass $http_upgrade;
-        }
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
     }
-    ````
+}
+````
 
-    Create a symbolic link:
+Create a symbolic link:
 
-    ```bash
-    sudo ln -s /etc/nginx/sites-available/nextjs /etc/nginx/sites-enabled/
-    ```
+```bash
+sudo ln -s /etc/nginx/sites-available/nextjs /etc/nginx/sites-enabled/
+```
 
-    Test the configuration:
+Test the configuration:
 
-    ```bash
-    sudo nginx -t
-    ```
+```bash
+sudo nginx -t
+```
 
-    If the test is successful, reload Nginx:
+If the test is successful, reload Nginx:
 
-    ```bash
-    sudo systemctl reload nginx
-    ```
+```bash
+sudo systemctl reload nginx
+```
 
 5.  Next.js configuration:
-
-    ````bash
-    git clone <repo-url>
-    ```bash
-    cd repo-directory
-    ```bash
-    npm install; npm install -g pm2
-    ```bash
-    npm run build
-    ```bash
-    pm2 start npm --name "music-subscription-app" -- start
-    ````
+````bash
+git clone <repo-url>
+```bash
+cd repo-directory
+```bash
+npm install; npm install -g pm2
+```bash
+npm run build
+```bash
+pm2 start npm --name "music-subscription-app" -- start
+````
