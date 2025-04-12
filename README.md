@@ -1,6 +1,7 @@
 ## Table of Contents
 
 - [System Architecture Overview](#system-architecture-overview)
+- [Assignment Note](#assignment-note)
 - [1. Frontend Layer](#1-frontend-layer)
 - [2. API Gateway](#2-api-gateway)
 - [3. Backend Services](#3-backend-services)
@@ -17,6 +18,10 @@
 ![Architecture](./images/architecture.png)
 
 This document provides an overview of the system architecture, detailing the components, their interactions, and the data flow.
+
+# Assignment Note
+1. Task 1 and Task 2 are inside the scripts folder
+2. Lambda and Scripts are written in python, Frontend is written in React + TS using Next.JS framework
 
 ## 1. Frontend Layer
 
